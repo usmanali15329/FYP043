@@ -10,3 +10,4 @@ shapely
 numpy
 folium
 streamlit_folium
+plotly
