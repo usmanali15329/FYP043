@@ -6,6 +6,5 @@ geopandas
 shapely
 scikit-learn
 joblib
-logging
 shapely
 numpy
