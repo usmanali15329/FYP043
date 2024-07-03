@@ -14,13 +14,6 @@ import datetime
 import os
 
 
-port = int(os.environ.get('PORT', 8501))
-st.set_page_config(page_title='Your App', layout='wide')
-
-# Your Streamlit app code here
-
-if __name__ == '__main__':
-    st.run('app.py', server_port=port)
 
 # Load and preprocess data
 data_path = 'globalterrorismdb.xlsx'
