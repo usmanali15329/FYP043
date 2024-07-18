@@ -13,12 +13,10 @@ from predict import train_model, predict_future_incidents
 import datetime
 import os
 
-
-
 # Load and preprocess data
 data_path = 'globalterrorismdb.xlsx'
 data = load_data(data_path)
-data = preprocess_data(data, num_threads=os.cpu_count())  # Use the maximum number of threads
+data = preprocess_data(data, num_threads=128)  # Use the maximum number of threads
 data = omit_empty_columns(data)
 
 # Ensure 'date' column is in datetime format
@@ -38,7 +36,7 @@ start_date, end_date = st.sidebar.slider(
     min_value=min_date,
     max_value=max_date,
     value=(min_date, max_date),
-    format="YYYY-MM-DD"
+    format="YYYY"
 )
 filtered_data = filter_data_by_date(data, start_date, end_date)
 
@@ -79,6 +77,8 @@ model_name = st.sidebar.selectbox(
     ['Linear Regression', 'Decision Tree', 'Random Forest', 'Support Vector Regression', 'Gradient Boosting']
 )
 
+model = None  # Initialize the model variable
+
 if st.sidebar.button('Train Model'):
     model, X_test, y_test = train_model(filtered_data, model_name)
     st.sidebar.write(f"{model_name} model trained successfully")
@@ -92,6 +92,9 @@ st.sidebar.subheader('Predict Future Incidents')
 prediction_months = st.sidebar.slider('Select number of months for prediction', 1, 12, 3)
 
 if st.sidebar.button('Predict'):
-    future_predictions = predict_future_incidents(model, filtered_data, prediction_months)
+    if model is None:
+        # Train the model if not already trained
+        model, X_test, y_test = train_model(filtered_data, model_name)
+    future_predictions = predict_future_incidents(filtered_data, model_name)
     st.write(f"Predicted incidents for the next {prediction_months} months:")
     st.dataframe(future_predictions)
