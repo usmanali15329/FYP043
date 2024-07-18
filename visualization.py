@@ -1,6 +1,7 @@
 import geopandas as gpd
 from shapely.geometry import Point
 import folium
+from folium.plugins import MarkerCluster
 from streamlit_folium import folium_static
 import logging
 import streamlit as st
@@ -21,25 +22,25 @@ def plot_incidents_over_time(data):
 
 def plot_geographical_distribution(data):
     try:
-        data = data.dropna(subset=['latitude', 'longitude'])  # Drop rows with NaN values in lat/lon
-        geometry = [Point(xy) for xy in zip(data['longitude'], data['latitude'])]
-        gdf = gpd.GeoDataFrame(data, geometry=geometry)
-        
-        m = folium.Map(location=[30.3753, 69.3451], zoom_start=5, tiles='Stamen Terrain', attr='Stamen Terrain')
+        st.header('Geographical Distribution of Incidents')
 
-        for _, row in gdf.iterrows():
-            folium.Marker(
-                location=[row['latitude'], row['longitude']],
-                popup=(
-                    f"City: {row['city']}<br>"
-                    f"Date: {row['date'].strftime('%Y-%m-%d')}<br>"
-                    f"Attack Type: {row['attacktype1_txt']}<br>"
-                    f"Target Type: {row['targtype1_txt']}<br>"
-                    f"Number of Kills: {row['nkill']}"
-                )
-            ).add_to(m)
+        # Create a Folium map centered around Pakistan with OpenStreetMap tiles
+        m = folium.Map(location=[30.3753, 69.3451], zoom_start=5, tiles='OpenStreetMap')
 
-        folium_static(m)
+        # Add a marker cluster to the map
+        marker_cluster = MarkerCluster().add_to(m)
+
+        # Filter out rows with NaN values in 'latitude' and 'longitude'
+        filtered_data = data.dropna(subset=['latitude', 'longitude'])
+
+        # Add markers to the map
+        for idx, row in filtered_data.iterrows():
+            folium.Marker(location=[row['latitude'], row['longitude']],
+                          popup=f"City: {row['city']}<br>Date: {row['date'].strftime('%Y-%m-%d')}<br>Attack Type: {row['attacktype1_txt']}<br>Target Type: {row['targtype1_txt']}<br>Number of Kills: {row['nkill']}",
+                          tooltip=row['city']).add_to(marker_cluster)
+
+        # Display the map
+        folium_static(m, width=700, height=500)
         logging.info("Geographical distribution plot generated successfully")
     except Exception as e:
         logging.error(f"Error generating geographical distribution plot: {e}")
